@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Protocol">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="manifest.json">
+<title>Weight Protocol</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface2: #1a1a1a;
+  --border: #222;
+  --text: #efefef;
+  --dim: #444;
+  --mid: #888;
+  --green: #00ff87;
+  --amber: #f5a623;
+  --orange: #ff6b2b;
+  --red: #ff2d55;
+  --mini: #bf5af2;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', sans-serif;
+  overscroll-behavior: none;
+}
+
+/* ── SHELL ── */
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+/* ── STATUS BAR ── */
+.status-bar {
+  padding: 14px 20px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.app-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.today-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: 1px;
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  padding: 0 20px;
+  gap: 4px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+
+.tab {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 10px 14px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  -webkit-appearance: none;
+}
+
+.tab.active {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+
+/* ── SCROLL CONTENT ── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px;
+}
+
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── LOG TODAY ── */
+.log-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.log-hero-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.weight-input-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.weight-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--border);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 52px;
+  font-weight: 600;
+  width: 160px;
+  text-align: center;
+  outline: none;
+  padding: 4px 0;
+  -webkit-appearance: none;
+  transition: border-color 0.2s;
+}
+
+.weight-input:focus { border-bottom-color: var(--mid); }
+.weight-input::placeholder { color: var(--dim); }
+
+.weight-unit {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 18px;
+  color: var(--mid);
+  padding-top: 20px;
+}
+
+.log-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  -webkit-appearance: none;
+}
+
+.log-btn:active { opacity: 0.7; }
+
+/* ── ZONE CARD ── */
+.zone-card {
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+}
+
+.zone-card-header {
+  background: var(--surface);
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.zone-card-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--dim);
+  text-transform: uppercase;
+}
+
+.avg-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.zone-card-body {
+  padding: 18px;
+  transition: background 0.4s;
+}
+
+.zone-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.zone-pill .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.zone-action-text {
+  font-size: 13px;
+  color: var(--mid);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.zone-kcal-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.zone-kcal-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.zone-kcal-suffix {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Zone colour schemes */
+.zGREEN .zone-card-body { background: rgba(0,255,135,0.05); }
+.zGREEN .zone-pill { background: rgba(0,255,135,0.1); color: var(--green); }
+.zGREEN .zone-pill .dot { background: var(--green); }
+.zGREEN .zone-kcal-num { color: var(--green); }
+.zGREEN .avg-value { color: var(--green); }
+
+.zAMBER .zone-card-body { background: rgba(245,166,35,0.05); }
+.zAMBER .zone-pill { background: rgba(245,166,35,0.1); color: var(--amber); }
+.zAMBER .zone-pill .dot { background: var(--amber); }
+.zAMBER .zone-kcal-num { color: var(--amber); }
+.zAMBER .avg-value { color: var(--amber); }
+
+.zORANGE .zone-card-body { background: rgba(255,107,43,0.05); }
+.zORANGE .zone-pill { background: rgba(255,107,43,0.1); color: var(--orange); }
+.zORANGE .zone-pill .dot { background: var(--orange); }
+.zORANGE .zone-kcal-num { color: var(--orange); }
+.zORANGE .avg-value { color: var(--orange); }
+
+.zRED .zone-card-body { background: rgba(255,45,85,0.05); }
+.zRED .zone-pill { background: rgba(255,45,85,0.1); color: var(--red); }
+.zRED .zone-pill .dot { background: var(--red); }
+.zRED .zone-kcal-num { color: var(--red); }
+.zRED .avg-value { color: var(--red); }
+
+.zMINI .zone-card-body { background: rgba(191,90,242,0.05); }
+.zMINI .zone-pill { background: rgba(191,90,242,0.1); color: var(--mini); }
+.zMINI .zone-pill .dot { background: var(--mini); }
+.zMINI .zone-kcal-num { color: var(--mini); }
+.zMINI .avg-value { color: var(--mini); }
+
+.zNONE .avg-value { color: var(--dim); }
+
+/* ── WEEK STRIP ── */
+.week-strip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.week-strip-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.days-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.day-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.day-chip-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--dim);
+  letter-spacing: 1px;
+}
+
+.day-chip-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mid);
+  background: var(--surface2);
+  border-radius: 8px;
+  width: 100%;
+  text-align: center;
+  padding: 6px 2px;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-chip-val.today {
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.day-chip-val.has-data {
+  color: var(--text);
+}
+
+/* ── HISTORY VIEW ── */
+.history-list { display: flex; flex-direction: column; gap: 8px; }
+
+.history-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--mid);
+}
+
+.history-weight {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.history-delete {
+  background: none;
+  border: none;
+  color: var(--dim);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 0 0 12px;
+  line-height: 1;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--dim);
+  letter-spacing: 1px;
+}
+
+/* ── PROTOCOL VIEW ── */
+.proto-section { margin-bottom: 20px; }
+
+.proto-heading {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.proto-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}
+
+.proto-table th {
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--dim);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.proto-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--mid);
+  vertical-align: top;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.proto-table tr:last-child td { border-bottom: none; }
+
+.proto-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.proto-zone-cell {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: calc(20px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--text);
+  color: var(--bg);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-weight: 500;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 100;
+  white-space: nowrap;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── FITBIT SHORTCUT SECTION ── */
+.shortcut-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.shortcut-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.shortcut-desc {
+  font-size: 13px;
+  color: var(--mid);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.shortcut-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shortcut-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.step-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--mid);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.step-text {
+  font-size: 12px;
+  color: var(--mid);
+  line-height: 1.6;
+}
+
+.step-text code {
+  font-family: 'IBM Plex Mono', monospace;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  color: var(--text);
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="status-bar">
+    <div class="app-title">Protocol</div>
+    <div class="today-date" id="todayDate"></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('log')">Log</button>
+    <button class="tab" onclick="switchTab('history')">History</button>
+    <button class="tab" onclick="switchTab('protocol')">Zones</button>
+    <button class="tab" onclick="switchTab('setup')">Setup</button>
+  </div>
+
+  <div class="content">
+
+    <!-- LOG TAB -->
+    <div class="view active" id="view-log">
+
+      <div class="log-hero">
+        <div class="log-hero-label">Today's Weight</div>
+        <div class="weight-input-wrap">
+          <input class="weight-input" type="number" id="weightInput"
+            inputmode="decimal" step="0.1" min="50" max="150" placeholder="00.0">
+          <div class="weight-unit">kg</div>
+        </div>
+        <button class="log-btn" onclick="logWeight()">LOG WEIGHT</button>
+      </div>
+
+      <div class="zone-card zNONE" id="zoneCard">
+        <div class="zone-card-header">
+          <span class="zone-card-label">7-Day Rolling Avg</span>
+          <span class="avg-value" id="avgDisplay">—</span>
+        </div>
+        <div class="zone-card-body">
+          <div class="zone-pill" id="zonePill">
+            <span class="dot"></span>
+            <span id="zoneLabel">NO DATA</span>
+          </div>
+          <div class="zone-action-text" id="zoneActionText">Log your weight to calculate your zone.</div>
+          <div class="zone-kcal-row">
+            <div class="zone-kcal-num" id="zoneKcal">—</div>
+            <div class="zone-kcal-suffix" id="zoneKcalSuffix"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="week-strip">
+        <div class="week-strip-label">This Week</div>
+        <div class="days-row" id="daysRow"></div>
+      </div>
+
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div class="view" id="view-history">
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+    <!-- PROTOCOL TAB -->
+    <div class="view" id="view-protocol">
+      <div class="proto-section">
+        <div class="proto-heading">Zone Trigger System</div>
+        <table class="proto-table">
+          <thead>
+            <tr>
+              <th>Zone</th><th>Range</th><th>Kcal</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="proto-zone-cell"><span class="proto-dot" style="background:#00ff87"></span>GREEN</div></td>
+              <td>78–79.5</td><td>2,700</td><td>TDEE — no change</td>
+            </tr>
+            <tr>
+              <td><div class="proto-zone-cell"><span class="proto-dot" style="background:#f5a623"></span>AMBER</div></td>
+              <td>79.5–80</td><td>2,700</td><td>Remove one dinner carb</td>
+            </tr>
+            <tr>
+              <td><div class="proto-zone-cell"><span class="proto-dot" style="background:#ff6b2b"></span>ORANGE</div></td>
+              <td>80–80.5</td><td>2,500</td><td>Drop 200 kcal from carbs</td>
+            </tr>
+            <tr>
+              <td><div class="proto-zone-cell"><span class="proto-dot" style="background:#ff2d55"></span>RED</div></td>
+              <td>80.5–81</td><td>2,000</td><td>Phase 1 protocol</td>
+            </tr>
+            <tr>
+              <td><div class="proto-zone-cell"><span class="proto-dot" style="background:#bf5af2"></span>MINI CUT</div></td>
+              <td>&gt;82</td><td>1,850</td><td>Cut until 79.5kg avg</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="proto-section">
+        <div class="proto-heading">Core Rules</div>
+        <div class="shortcut-card">
+          <div class="shortcut-steps">
+            <div class="shortcut-step">
+              <div class="step-num">1</div>
+              <div class="step-text">Weigh every morning. Same conditions — post-toilet, pre-food.</div>
+            </div>
+            <div class="shortcut-step">
+              <div class="step-num">2</div>
+              <div class="step-text">Zone is determined by 7-day rolling average only. Single weigh-ins are noise.</div>
+            </div>
+            <div class="shortcut-step">
+              <div class="step-num">3</div>
+              <div class="step-text">Never exit a zone until the rolling average confirms it. Not how you feel.</div>
+            </div>
+            <div class="shortcut-step">
+              <div class="step-num">4</div>
+              <div class="step-text">Protein stays fixed at 195g at every zone. Carbs are the only lever.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETUP TAB -->
+    <div class="view" id="view-setup">
+      <div class="shortcut-card">
+        <div class="shortcut-title">Fitbit Morning Shortcut</div>
+        <div class="shortcut-desc">Set up an iOS Shortcut to open this app each morning after your Fitbit sync. No API keys required.</div>
+        <div class="shortcut-steps">
+          <div class="shortcut-step">
+            <div class="step-num">1</div>
+            <div class="step-text">Open the <code>Shortcuts</code> app on your iPhone.</div>
+          </div>
+          <div class="shortcut-step">
+            <div class="step-num">2</div>
+            <div class="step-text">Tap <code>+</code> → <code>Add Action</code> → search <code>Open URL</code>.</div>
+          </div>
+          <div class="shortcut-step">
+            <div class="step-num">3</div>
+            <div class="step-text">Set the URL to the address where this app is hosted (e.g. your GitHub Pages URL).</div>
+          </div>
+          <div class="shortcut-step">
+            <div class="step-num">4</div>
+            <div class="step-text">Tap the shortcut name → <code>Add to Home Screen</code>. Done.</div>
+          </div>
+          <div class="shortcut-step">
+            <div class="step-num">5</div>
+            <div class="step-text">Go to <code>Automation</code> tab → <code>+</code> → <code>Time of Day</code> → set 07:30 AM daily → add action: run this shortcut.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="shortcut-card">
+        <div class="shortcut-title">Install as iPhone App</div>
+        <div class="shortcut-desc">Add this tracker to your home screen so it runs like a native app — no App Store needed.</div>
+        <div class="shortcut-steps">
+          <div class="shortcut-step">
+            <div class="step-num">1</div>
+            <div class="step-text">Open this page in <code>Safari</code> (not Chrome).</div>
+          </div>
+          <div class="shortcut-step">
+            <div class="step-num">2</div>
+            <div class="step-text">Tap the <code>Share</code> icon at the bottom of Safari.</div>
+          </div>
+          <div class="shortcut-step">
+            <div class="step-num">3</div>
+            <div class="step-text">Scroll down and tap <code>Add to Home Screen</code>.</div>
+          </div>
+          <div class="shortcut-step">
+            <div class="step-num">4</div>
+            <div class="step-text">Rename it <code>Protocol</code> and tap <code>Add</code>. It will appear as a full-screen app.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="shortcut-card">
+        <div class="shortcut-title">Data Storage</div>
+        <div class="shortcut-desc">All weight data is saved locally on your device using browser storage. It persists between sessions and works fully offline once installed.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──
+const STORAGE_KEY = 'protocol_weights';
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// ── ZONES ──
+const ZONES = [
+  { key:'GREEN',  min:0,    max:79.5, kcal:'2,700', label:'GREEN',    action:'Maintenance. Stay at TDEE. No intervention required.' },
+  { key:'AMBER',  min:79.5, max:80,   kcal:'2,700', label:'AMBER',    action:'Minor surplus. Remove one carb source from dinner.' },
+  { key:'ORANGE', min:80,   max:80.5, kcal:'2,500', label:'ORANGE',   action:'Sustained creep. Drop 200 kcal from carbs immediately.' },
+  { key:'RED',    min:80.5, max:82,   kcal:'2,000', label:'RED',      action:'Significant drift. Return to Phase 1 — 2,000 kcal.' },
+  { key:'MINI',   min:82,   max:999,  kcal:'1,850', label:'MINI CUT', action:'Ceiling breached. Initiate mini cut. Hold until 79.5kg rolling average.' },
+];
+
+function getZone(avg) {
+  if (avg < 78) return { key:'GREEN', kcal:'2,700', label:'GREEN', action:'Below anchor. Consider increasing by 150 kcal to protect lean mass.' };
+  return ZONES.find(z => avg >= z.min && avg < z.max) || null;
+}
+
+// ── DATE HELPERS ──
+function toDateStr(d) {
+  return d.toISOString().split('T')[0];
+}
+
+function getWeekDates() {
+  const today = new Date();
+  const dow = today.getDay();
+  const mon = new Date(today);
+  mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  return Array.from({length:7}, (_, i) => {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    return toDateStr(d);
+  });
+}
+
+function formatDate(str) {
+  const d = new Date(str + 'T12:00:00');
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+
+const DAY_LABELS = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+
+// ── ROLLING AVG ──
+function getRollingAvg(data) {
+  const today = new Date();
+  const cutoff = new Date(today);
+  cutoff.setDate(today.getDate() - 6);
+  const cutoffStr = toDateStr(cutoff);
+  const recent = data.filter(e => e.date >= cutoffStr);
+  if (!recent.length) return null;
+  return recent.reduce((s, e) => s + e.weight, 0) / recent.length;
+}
+
+// ── RENDER ──
+function renderZoneCard(avg) {
+  const card = document.getElementById('zoneCard');
+  const avgEl = document.getElementById('avgDisplay');
+  const pill = document.getElementById('zonePill');
+  const labelEl = document.getElementById('zoneLabel');
+  const actionEl = document.getElementById('zoneActionText');
+  const kcalEl = document.getElementById('zoneKcal');
+  const kcalSuffix = document.getElementById('zoneKcalSuffix');
+
+  card.className = 'zone-card';
+
+  if (avg === null) {
+    card.classList.add('zNONE');
+    avgEl.textContent = '—';
+    labelEl.textContent = 'NO DATA';
+    actionEl.textContent = 'Log your weight to calculate your zone.';
+    kcalEl.textContent = '—';
+    kcalSuffix.textContent = '';
+    return;
+  }
+
+  const zone = getZone(avg);
+  card.classList.add('z' + zone.key);
+  avgEl.textContent = avg.toFixed(2) + ' kg';
+  labelEl.textContent = zone.label;
+  actionEl.textContent = zone.action;
+  kcalEl.textContent = zone.kcal;
+  kcalSuffix.textContent = 'KCAL TARGET';
+}
+
+function renderWeekStrip(data) {
+  const weekDates = getWeekDates();
+  const todayStr = toDateStr(new Date());
+  const dataMap = {};
+  data.forEach(e => { dataMap[e.date] = e.weight; });
+
+  const row = document.getElementById('daysRow');
+  row.innerHTML = '';
+  weekDates.forEach((date, i) => {
+    const val = dataMap[date];
+    const isToday = date === todayStr;
+    const chip = document.createElement('div');
+    chip.className = 'day-chip';
+    const valClasses = ['day-chip-val', isToday ? 'today' : '', val ? 'has-data' : ''].filter(Boolean).join(' ');
+    chip.innerHTML = `
+      <div class="day-chip-label">${DAY_LABELS[i]}</div>
+      <div class="${valClasses}">${val ? val.toFixed(1) : '—'}</div>
+    `;
+    row.appendChild(chip);
+  });
+}
+
+function renderHistory(data) {
+  const list = document.getElementById('historyList');
+  const sorted = [...data].sort((a,b) => b.date.localeCompare(a.date));
+  if (!sorted.length) {
+    list.innerHTML = '<div class="empty-state">NO ENTRIES YET</div>';
+    return;
+  }
+  list.innerHTML = sorted.map(e => `
+    <div class="history-row">
+      <div class="history-date">${formatDate(e.date)}</div>
+      <div class="history-weight">${e.weight.toFixed(1)} kg</div>
+      <button class="history-delete" onclick="deleteEntry('${e.date}')">×</button>
+    </div>
+  `).join('');
+}
+
+function renderAll() {
+  const data = loadData();
+  const avg = getRollingAvg(data);
+  renderZoneCard(avg);
+  renderWeekStrip(data);
+  renderHistory(data);
+}
+
+// ── ACTIONS ──
+function logWeight() {
+  const input = document.getElementById('weightInput');
+  const val = parseFloat(input.value);
+  if (isNaN(val) || val < 50 || val > 150) {
+    showToast('Enter a valid weight');
+    return;
+  }
+  const data = loadData();
+  const todayStr = toDateStr(new Date());
+  const existing = data.findIndex(e => e.date === todayStr);
+  if (existing >= 0) {
+    data[existing].weight = val;
+  } else {
+    data.push({ date: todayStr, weight: val });
+  }
+  saveData(data);
+  input.value = '';
+  input.blur();
+  renderAll();
+  showToast('Logged ' + val.toFixed(1) + ' kg');
+}
+
+function deleteEntry(date) {
+  const data = loadData().filter(e => e.date !== date);
+  saveData(data);
+  renderAll();
+  showToast('Entry removed');
+}
+
+// ── TABS ──
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['log','history','protocol','setup'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  if (name === 'history') renderHistory(loadData());
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── ENTER KEY ──
+document.getElementById('weightInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') logWeight();
+});
+
+// ── INIT ──
+document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+renderAll();
+</script>
+</body>
+</html>
